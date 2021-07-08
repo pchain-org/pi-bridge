@@ -1,0 +1,5 @@
+---
+
+- name: restart pibridged
+  service: name=pibridged state=restarted
+
