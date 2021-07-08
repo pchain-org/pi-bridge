@@ -1,6 +1,6 @@
 # Pi-Bridge
 
-Pi-Bridge is new generation layer2 cross-chain bridge, based on [Pi-Bridge-SDK](https://github.com/pchain-org/pi-chain-sdk) development.
+Pi-Bridge is new generation layer2 cross-chain bridge, based on [Pi-Bridge-SDK](https://github.com/pchain-org/pi-bridge-sdk) development.
 
 ## Required
 [Go 1.15+](https://golang.org/dl/)
