@@ -3,12 +3,12 @@ import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
 import { MsgUpdateProxy } from "./types/proxy/tx";
-import { MsgCreateProxy } from "./types/proxy/tx";
 import { MsgDeleteProxy } from "./types/proxy/tx";
+import { MsgCreateProxy } from "./types/proxy/tx";
 const types = [
     ["/pchainorg.pibridge.proxy.MsgUpdateProxy", MsgUpdateProxy],
-    ["/pchainorg.pibridge.proxy.MsgCreateProxy", MsgCreateProxy],
     ["/pchainorg.pibridge.proxy.MsgDeleteProxy", MsgDeleteProxy],
+    ["/pchainorg.pibridge.proxy.MsgCreateProxy", MsgCreateProxy],
 ];
 export const MissingWalletError = new Error("wallet is required");
 const registry = new Registry(types);
@@ -24,8 +24,8 @@ const txClient = async (wallet, { addr: addr } = { addr: "http://localhost:26657
     return {
         signAndBroadcast: (msgs, { fee, memo } = { fee: defaultFee, memo: "" }) => client.signAndBroadcast(address, msgs, fee, memo),
         msgUpdateProxy: (data) => ({ typeUrl: "/pchainorg.pibridge.proxy.MsgUpdateProxy", value: data }),
-        msgCreateProxy: (data) => ({ typeUrl: "/pchainorg.pibridge.proxy.MsgCreateProxy", value: data }),
         msgDeleteProxy: (data) => ({ typeUrl: "/pchainorg.pibridge.proxy.MsgDeleteProxy", value: data }),
+        msgCreateProxy: (data) => ({ typeUrl: "/pchainorg.pibridge.proxy.MsgCreateProxy", value: data }),
     };
 };
 const queryClient = async ({ addr: addr } = { addr: "http://localhost:1317" }) => {

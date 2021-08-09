@@ -152,23 +152,6 @@ export default {
                 }
             }
         },
-        async sendMsgCreateProxy({ rootGetters }, { value, fee = [], memo = '' }) {
-            try {
-                const txClient = await initTxClient(rootGetters);
-                const msg = await txClient.msgCreateProxy(value);
-                const result = await txClient.signAndBroadcast([msg], { fee: { amount: fee,
-                        gas: "200000" }, memo });
-                return result;
-            }
-            catch (e) {
-                if (e == MissingWalletError) {
-                    throw new SpVuexError('TxClient:MsgCreateProxy:Init', 'Could not initialize signing client. Wallet is required.');
-                }
-                else {
-                    throw new SpVuexError('TxClient:MsgCreateProxy:Send', 'Could not broadcast Tx: ' + e.message);
-                }
-            }
-        },
         async sendMsgDeleteProxy({ rootGetters }, { value, fee = [], memo = '' }) {
             try {
                 const txClient = await initTxClient(rootGetters);
@@ -183,6 +166,23 @@ export default {
                 }
                 else {
                     throw new SpVuexError('TxClient:MsgDeleteProxy:Send', 'Could not broadcast Tx: ' + e.message);
+                }
+            }
+        },
+        async sendMsgCreateProxy({ rootGetters }, { value, fee = [], memo = '' }) {
+            try {
+                const txClient = await initTxClient(rootGetters);
+                const msg = await txClient.msgCreateProxy(value);
+                const result = await txClient.signAndBroadcast([msg], { fee: { amount: fee,
+                        gas: "200000" }, memo });
+                return result;
+            }
+            catch (e) {
+                if (e == MissingWalletError) {
+                    throw new SpVuexError('TxClient:MsgCreateProxy:Init', 'Could not initialize signing client. Wallet is required.');
+                }
+                else {
+                    throw new SpVuexError('TxClient:MsgCreateProxy:Send', 'Could not broadcast Tx: ' + e.message);
                 }
             }
         },
@@ -201,21 +201,6 @@ export default {
                 }
             }
         },
-        async MsgCreateProxy({ rootGetters }, { value }) {
-            try {
-                const txClient = await initTxClient(rootGetters);
-                const msg = await txClient.msgCreateProxy(value);
-                return msg;
-            }
-            catch (e) {
-                if (e == MissingWalletError) {
-                    throw new SpVuexError('TxClient:MsgCreateProxy:Init', 'Could not initialize signing client. Wallet is required.');
-                }
-                else {
-                    throw new SpVuexError('TxClient:MsgCreateProxy:Create', 'Could not create message: ' + e.message);
-                }
-            }
-        },
         async MsgDeleteProxy({ rootGetters }, { value }) {
             try {
                 const txClient = await initTxClient(rootGetters);
@@ -228,6 +213,21 @@ export default {
                 }
                 else {
                     throw new SpVuexError('TxClient:MsgDeleteProxy:Create', 'Could not create message: ' + e.message);
+                }
+            }
+        },
+        async MsgCreateProxy({ rootGetters }, { value }) {
+            try {
+                const txClient = await initTxClient(rootGetters);
+                const msg = await txClient.msgCreateProxy(value);
+                return msg;
+            }
+            catch (e) {
+                if (e == MissingWalletError) {
+                    throw new SpVuexError('TxClient:MsgCreateProxy:Init', 'Could not initialize signing client. Wallet is required.');
+                }
+                else {
+                    throw new SpVuexError('TxClient:MsgCreateProxy:Create', 'Could not create message: ' + e.message);
                 }
             }
         },

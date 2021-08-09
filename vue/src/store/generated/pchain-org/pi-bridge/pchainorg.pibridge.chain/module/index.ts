@@ -4,15 +4,15 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
-import { MsgCreateChain } from "./types/chain/tx";
 import { MsgUpdateChain } from "./types/chain/tx";
 import { MsgDeleteChain } from "./types/chain/tx";
+import { MsgCreateChain } from "./types/chain/tx";
 
 
 const types = [
-  ["/pchainorg.pibridge.chain.MsgCreateChain", MsgCreateChain],
   ["/pchainorg.pibridge.chain.MsgUpdateChain", MsgUpdateChain],
   ["/pchainorg.pibridge.chain.MsgDeleteChain", MsgDeleteChain],
+  ["/pchainorg.pibridge.chain.MsgCreateChain", MsgCreateChain],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -41,9 +41,9 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
-    msgCreateChain: (data: MsgCreateChain): EncodeObject => ({ typeUrl: "/pchainorg.pibridge.chain.MsgCreateChain", value: data }),
     msgUpdateChain: (data: MsgUpdateChain): EncodeObject => ({ typeUrl: "/pchainorg.pibridge.chain.MsgUpdateChain", value: data }),
     msgDeleteChain: (data: MsgDeleteChain): EncodeObject => ({ typeUrl: "/pchainorg.pibridge.chain.MsgDeleteChain", value: data }),
+    msgCreateChain: (data: MsgCreateChain): EncodeObject => ({ typeUrl: "/pchainorg.pibridge.chain.MsgCreateChain", value: data }),
     
   };
 };
