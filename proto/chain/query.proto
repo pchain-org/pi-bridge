@@ -1,0 +1,43 @@
+syntax = "proto3";
+package pchainorg.pibridge.chain;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "chain/chain.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/chain/types";
+
+// Query defines the gRPC querier service.
+service Query {
+    // this line is used by starport scaffolding # 2
+
+	// Queries a chain by index.
+	rpc Chain(QueryGetChainRequest) returns (QueryGetChainResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/chain/chain/{index}";
+	}
+
+	// Queries a list of chain items.
+	rpc ChainAll(QueryAllChainRequest) returns (QueryAllChainResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/chain/chain";
+	}
+
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetChainRequest {
+	string index = 1;
+}
+
+message QueryGetChainResponse {
+	Chain Chain = 1;
+}
+
+message QueryAllChainRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllChainResponse {
+	repeated Chain Chain = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -1,0 +1,38 @@
+syntax = "proto3";
+package pchainorg.pibridge.proxy;
+
+// this line is used by starport scaffolding # proto/tx/import
+import "proxy/proxy.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/proxy/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+  rpc CreateProxy(MsgCreateProxy) returns (MsgCreateProxyResponse);
+  rpc UpdateProxy(MsgUpdateProxy) returns (MsgUpdateProxyResponse);
+  rpc DeleteProxy(MsgDeleteProxy) returns (MsgDeleteProxyResponse);
+}
+
+// this line is used by starport scaffolding # proto/tx/message
+message MsgCreateProxy {
+  string creator = 1;
+  string index = 2;
+  string addressList = 3;
+  string address = 4;
+}
+message MsgCreateProxyResponse { }
+
+message MsgUpdateProxy {
+  string creator = 1;
+  string index = 2;
+  string addressList = 3;
+  string address = 4;
+}
+message MsgUpdateProxyResponse { }
+
+message MsgDeleteProxy {
+  string creator = 1;
+  string index = 2;
+}
+message MsgDeleteProxyResponse { }

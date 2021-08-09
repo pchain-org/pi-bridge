@@ -1,0 +1,43 @@
+syntax = "proto3";
+package pchainorg.pibridge.proxy;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "proxy/proxy.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/proxy/types";
+
+// Query defines the gRPC querier service.
+service Query {
+    // this line is used by starport scaffolding # 2
+
+	// Queries a proxy by index.
+	rpc Proxy(QueryGetProxyRequest) returns (QueryGetProxyResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/proxy/proxy/{index}";
+	}
+
+	// Queries a list of proxy items.
+	rpc ProxyAll(QueryAllProxyRequest) returns (QueryAllProxyResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/proxy/proxy";
+	}
+
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetProxyRequest {
+	string index = 1;
+}
+
+message QueryGetProxyResponse {
+	Proxy Proxy = 1;
+}
+
+message QueryAllProxyRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllProxyResponse {
+	repeated Proxy Proxy = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

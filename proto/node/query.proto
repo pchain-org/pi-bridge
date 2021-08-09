@@ -1,0 +1,43 @@
+syntax = "proto3";
+package pchainorg.pibridge.node;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "node/node.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/node/types";
+
+// Query defines the gRPC querier service.
+service Query {
+    // this line is used by starport scaffolding # 2
+
+	// Queries a node by index.
+	rpc Node(QueryGetNodeRequest) returns (QueryGetNodeResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/node/node/{index}";
+	}
+
+	// Queries a list of node items.
+	rpc NodeAll(QueryAllNodeRequest) returns (QueryAllNodeResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/node/node";
+	}
+
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetNodeRequest {
+	string index = 1;
+}
+
+message QueryGetNodeResponse {
+	Node Node = 1;
+}
+
+message QueryAllNodeRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeResponse {
+	repeated Node Node = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

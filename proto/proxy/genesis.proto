@@ -1,0 +1,14 @@
+syntax = "proto3";
+package pchainorg.pibridge.proxy;
+
+// this line is used by starport scaffolding # genesis/proto/import
+import "proxy/proxy.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/proxy/types";
+
+// GenesisState defines the proxy module's genesis state.
+message GenesisState {
+    // this line is used by starport scaffolding # genesis/proto/state
+		repeated Proxy proxyList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
+    // this line is used by starport scaffolding # ibc/genesis/proto
+}

@@ -1,0 +1,54 @@
+syntax = "proto3";
+package pchainorg.pibridge.trx;
+
+// this line is used by starport scaffolding # proto/tx/import
+import "trx/trx.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/trx/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+  rpc CrossChainTransfer(MsgCrossChainTransfer) returns (MsgCrossChainTransferResponse);
+  rpc CreateTrx(MsgCreateTrx) returns (MsgCreateTrxResponse);
+  rpc UpdateTrx(MsgUpdateTrx) returns (MsgUpdateTrxResponse);
+  rpc DeleteTrx(MsgDeleteTrx) returns (MsgDeleteTrxResponse);
+}
+
+// this line is used by starport scaffolding # proto/tx/message
+message MsgCrossChainTransfer {
+  string creator = 1;
+  string asset = 2;
+  int32 amount = 3;
+  string fromChain = 4;
+  string fromAddress = 5;
+  string toChain = 6;
+  string toAddress = 7;
+}
+
+message MsgCrossChainTransferResponse {
+}
+
+message MsgCreateTrx {
+  string creator = 1;
+  string index = 2;
+  int32 chainID = 3;
+  string address = 4;
+  string crossChainMsgs = 5;
+}
+message MsgCreateTrxResponse { }
+
+message MsgUpdateTrx {
+  string creator = 1;
+  string index = 2;
+  int32 chainID = 3;
+  string address = 4;
+  string crossChainMsgs = 5;
+}
+message MsgUpdateTrxResponse { }
+
+message MsgDeleteTrx {
+  string creator = 1;
+  string index = 2;
+}
+message MsgDeleteTrxResponse { }

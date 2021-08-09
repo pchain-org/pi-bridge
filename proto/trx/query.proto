@@ -1,0 +1,43 @@
+syntax = "proto3";
+package pchainorg.pibridge.trx;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "trx/trx.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/trx/types";
+
+// Query defines the gRPC querier service.
+service Query {
+    // this line is used by starport scaffolding # 2
+
+	// Queries a trx by index.
+	rpc Trx(QueryGetTrxRequest) returns (QueryGetTrxResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/trx/trx/{index}";
+	}
+
+	// Queries a list of trx items.
+	rpc TrxAll(QueryAllTrxRequest) returns (QueryAllTrxResponse) {
+		option (google.api.http).get = "/pchain-org/pibridge/trx/trx";
+	}
+
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetTrxRequest {
+	string index = 1;
+}
+
+message QueryGetTrxResponse {
+	Trx Trx = 1;
+}
+
+message QueryAllTrxRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTrxResponse {
+	repeated Trx Trx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -1,9 +1,0 @@
----
-
-- name: systemctl
-  systemd: name=pibridgecli enabled=yes daemon_reload=yes
-
-- name: restart pibridgecli
-  service: name=pibridgecli state=restarted
-
-

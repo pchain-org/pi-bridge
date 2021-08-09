@@ -1,0 +1,13 @@
+syntax = "proto3";
+package pchainorg.pibridge.node;
+
+option go_package = "github.com/pchain-org/pi-bridge/x/node/types";
+
+import "gogoproto/gogo.proto";
+
+message Node {
+  string creator = 1;
+  string index = 2;
+  string peerPubkey = 3; 
+  string address = 4; 
+}

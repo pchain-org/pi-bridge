@@ -1,0 +1,38 @@
+syntax = "proto3";
+package pchainorg.pibridge.node;
+
+// this line is used by starport scaffolding # proto/tx/import
+import "node/node.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/node/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+  rpc CreateNode(MsgCreateNode) returns (MsgCreateNodeResponse);
+  rpc UpdateNode(MsgUpdateNode) returns (MsgUpdateNodeResponse);
+  rpc DeleteNode(MsgDeleteNode) returns (MsgDeleteNodeResponse);
+}
+
+// this line is used by starport scaffolding # proto/tx/message
+message MsgCreateNode {
+  string creator = 1;
+  string index = 2;
+  string peerPubkey = 3;
+  string address = 4;
+}
+message MsgCreateNodeResponse { }
+
+message MsgUpdateNode {
+  string creator = 1;
+  string index = 2;
+  string peerPubkey = 3;
+  string address = 4;
+}
+message MsgUpdateNodeResponse { }
+
+message MsgDeleteNode {
+  string creator = 1;
+  string index = 2;
+}
+message MsgDeleteNodeResponse { }

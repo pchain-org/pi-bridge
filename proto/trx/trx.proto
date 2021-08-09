@@ -1,0 +1,14 @@
+syntax = "proto3";
+package pchainorg.pibridge.trx;
+
+option go_package = "github.com/pchain-org/pi-bridge/x/trx/types";
+
+import "gogoproto/gogo.proto";
+
+message Trx {
+  string creator = 1;
+  string index = 2;
+  int32 chainID = 3; 
+  string address = 4; 
+  string crossChainMsgs = 5; 
+}

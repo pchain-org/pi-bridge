@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pchainorg.pibridge.chain;
+
+option go_package = "github.com/pchain-org/pi-bridge/x/chain/types";
+
+import "gogoproto/gogo.proto";
+
+message Chain {
+  string creator = 1;
+  string index = 2;
+  int32 sourceChainID = 3; 
+  int32 height = 4; 
+  string proof = 5; 
+  string proxyAddress = 6; 
+  string extra = 7; 
+  string headerOrCrossChainMsg = 8; 
+}

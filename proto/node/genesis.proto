@@ -1,0 +1,14 @@
+syntax = "proto3";
+package pchainorg.pibridge.node;
+
+// this line is used by starport scaffolding # genesis/proto/import
+import "node/node.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/node/types";
+
+// GenesisState defines the node module's genesis state.
+message GenesisState {
+    // this line is used by starport scaffolding # genesis/proto/state
+		repeated Node nodeList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
+    // this line is used by starport scaffolding # ibc/genesis/proto
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package pchainorg.pibridge.proxy;
+
+option go_package = "github.com/pchain-org/pi-bridge/x/proxy/types";
+
+import "gogoproto/gogo.proto";
+
+message Proxy {
+  string creator = 1;
+  string index = 2;
+  string addressList = 3; 
+  string address = 4; 
+}

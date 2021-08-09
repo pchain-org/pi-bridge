@@ -1,0 +1,14 @@
+syntax = "proto3";
+package pchainorg.pibridge.trx;
+
+// this line is used by starport scaffolding # genesis/proto/import
+import "trx/trx.proto";
+
+option go_package = "github.com/pchain-org/pi-bridge/x/trx/types";
+
+// GenesisState defines the trx module's genesis state.
+message GenesisState {
+    // this line is used by starport scaffolding # genesis/proto/state
+		repeated Trx trxList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
+    // this line is used by starport scaffolding # ibc/genesis/proto
+}
