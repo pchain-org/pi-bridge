@@ -26,7 +26,7 @@ func CmdCreateBlock() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsHeaders, err := cast.ToStringE(args[3])
+			argsHeaders, err := cast.ToStringSliceE(args[3])
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ func CmdUpdateBlock() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsHeaders, err := cast.ToStringE(args[3])
+			argsHeaders, err := cast.ToStringSliceE(args[3])
 			if err != nil {
 				return err
 			}

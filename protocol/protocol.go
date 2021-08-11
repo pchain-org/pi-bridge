@@ -45,6 +45,7 @@ func MonitorETHChain(ctx sdk.Context, config *Config, accountKeeper authkeeper.A
 	block, flag := blockKeeper.GetBlock(ctx, height)
 	fmt.Println(block)
 	fmt.Println(flag)
+	
 }
 
 func MonitorETHCrossTX(ctx sdk.Context, config *Config, accountKeeper authkeeper.AccountKeeper,
@@ -65,8 +66,8 @@ func MonitorETHCrossTX(ctx sdk.Context, config *Config, accountKeeper authkeeper
 	fmt.Println(add2.GetSequence())
 }
 func (p *protocol) Start() {
-	MonitorETHChain(p.ctx, p.config, p.accountKeeper, p.blockKeeper)
-	MonitorETHCrossTX(p.ctx, p.config, p.accountKeeper, p.blockKeeper)
+	go MonitorETHChain(p.ctx, p.config, p.accountKeeper, p.blockKeeper)
+	go MonitorETHCrossTX(p.ctx, p.config, p.accountKeeper, p.blockKeeper)
 }
 
 type ProtocolInstance interface {
