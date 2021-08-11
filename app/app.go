@@ -83,7 +83,9 @@ import (
 	"github.com/pchain-org/pi-bridge/docs"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
+	protocol "github.com/pchain-org/pi-bridge/protocol"
 	blockmodule "github.com/pchain-org/pi-bridge/x/block"
 	blockmodulekeeper "github.com/pchain-org/pi-bridge/x/block/keeper"
 	blockmoduletypes "github.com/pchain-org/pi-bridge/x/block/types"
@@ -534,6 +536,7 @@ func New(
 		// `loadLatest` is set to true.
 		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 		app.CapabilityKeeper.InitializeAndSeal(ctx)
+
 	}
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
@@ -548,6 +551,8 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	p := protocol.MakeProtocol(ctx, app.AccountKeeper, app.BlockKeeper)
+	p.Start()
 	return app.mm.BeginBlock(ctx, req)
 }
 
@@ -649,6 +654,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	// register app's OpenAPI routes.
 	apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
 	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
+
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
