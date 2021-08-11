@@ -7,13 +7,14 @@ import (
 
 var _ sdk.Msg = &MsgCreateTrx{}
 
-func NewMsgCreateTrx(creator string, index string, chainID int32, address string, crossChainMsgs string) *MsgCreateTrx {
+func NewMsgCreateTrx(creator string, index string, chainID int32, address string, crossChainMsgs string, proof string) *MsgCreateTrx {
 	return &MsgCreateTrx{
 		Creator:        creator,
 		Index:          index,
 		ChainID:        chainID,
 		Address:        address,
 		CrossChainMsgs: crossChainMsgs,
+		Proof:          proof,
 	}
 }
 

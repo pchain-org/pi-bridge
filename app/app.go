@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cfg "github.com/pchain-org/pi-bridge/tools/config"
 	"github.com/spf13/cast"
 	"github.com/tendermint/spm/openapiconsole"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -83,6 +84,7 @@ import (
 	"github.com/pchain-org/pi-bridge/docs"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 	blockmodule "github.com/pchain-org/pi-bridge/x/block"
 	blockmodulekeeper "github.com/pchain-org/pi-bridge/x/block/keeper"
@@ -241,6 +243,8 @@ type App struct {
 
 	// the module manager
 	mm *module.Manager
+
+	confg *cfg.ServiceConfig
 }
 
 // New returns a reference to an initialized Gaia.
@@ -256,6 +260,13 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) cosmoscmd.App {
+
+	// load config
+	var ConfigPath string
+	servConfig := cfg.NewServiceConfig(ConfigPath)
+	if servConfig == nil {
+		tmos.Exit("startServer - create config failed!")
+	}
 
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
@@ -291,6 +302,7 @@ func New(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+		confg:             servConfig,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])

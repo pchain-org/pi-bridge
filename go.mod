@@ -10,8 +10,11 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0 // indirect
 	github.com/itchyny/base58-go v0.1.0
+	github.com/polynetwork/eth-contracts v0.0.0-20210115031323-d16252b2b857
 	github.com/prometheus/common v0.23.0
+	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
@@ -21,6 +24,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced
 	google.golang.org/grpc v1.38.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v0.0.0-20200527211525-6c9e30c09db2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
