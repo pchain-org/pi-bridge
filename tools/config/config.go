@@ -17,7 +17,7 @@ const (
 
 	ETH_USEFUL_BLOCK_NUM     = 3
 	ETH_PROOF_USERFUL_BLOCK  = 12
-	ONT_USEFUL_BLOCK_NUM     = 1
+	PI_USEFUL_BLOCK_NUM      = 1
 	DEFAULT_CONFIG_FILE_NAME = "./cs_config.json"
 	Version                  = "1.0"
 )
