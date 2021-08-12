@@ -4,7 +4,7 @@ export interface BlockBlock {
     /** @format int32 */
     chainID?: number;
     address?: string;
-    headers?: string;
+    headers?: string[];
 }
 export declare type BlockMsgCreateBlockResponse = object;
 export declare type BlockMsgDeleteBlockResponse = object;

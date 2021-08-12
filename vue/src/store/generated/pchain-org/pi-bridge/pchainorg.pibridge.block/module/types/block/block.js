@@ -16,8 +16,8 @@ export const Block = {
         if (message.address !== '') {
             writer.uint32(34).string(message.address);
         }
-        if (message.headers !== '') {
-            writer.uint32(42).string(message.headers);
+        for (const v of message.headers) {
+            writer.uint32(42).string(v);
         }
         return writer;
     },
@@ -25,6 +25,7 @@ export const Block = {
         const reader = input instanceof Uint8Array ? new Reader(input) : input;
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = { ...baseBlock };
+        message.headers = [];
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -41,7 +42,7 @@ export const Block = {
                     message.address = reader.string();
                     break;
                 case 5:
-                    message.headers = reader.string();
+                    message.headers.push(reader.string());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -52,6 +53,7 @@ export const Block = {
     },
     fromJSON(object) {
         const message = { ...baseBlock };
+        message.headers = [];
         if (object.creator !== undefined && object.creator !== null) {
             message.creator = String(object.creator);
         }
@@ -77,10 +79,9 @@ export const Block = {
             message.address = '';
         }
         if (object.headers !== undefined && object.headers !== null) {
-            message.headers = String(object.headers);
-        }
-        else {
-            message.headers = '';
+            for (const e of object.headers) {
+                message.headers.push(String(e));
+            }
         }
         return message;
     },
@@ -90,11 +91,17 @@ export const Block = {
         message.index !== undefined && (obj.index = message.index);
         message.chainID !== undefined && (obj.chainID = message.chainID);
         message.address !== undefined && (obj.address = message.address);
-        message.headers !== undefined && (obj.headers = message.headers);
+        if (message.headers) {
+            obj.headers = message.headers.map((e) => e);
+        }
+        else {
+            obj.headers = [];
+        }
         return obj;
     },
     fromPartial(object) {
         const message = { ...baseBlock };
+        message.headers = [];
         if (object.creator !== undefined && object.creator !== null) {
             message.creator = object.creator;
         }
@@ -120,10 +127,9 @@ export const Block = {
             message.address = '';
         }
         if (object.headers !== undefined && object.headers !== null) {
-            message.headers = object.headers;
-        }
-        else {
-            message.headers = '';
+            for (const e of object.headers) {
+                message.headers.push(e);
+            }
         }
         return message;
     }

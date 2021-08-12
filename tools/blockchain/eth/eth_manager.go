@@ -147,7 +147,7 @@ func (em *EthManager) SyncHeader(curHeight uint64) (*SyncHeader, error) {
 	}
 	if len(syncData.headerSync) > 0 {
 		index := strconv.FormatUint(cfg.SideChainId, 10)
-		msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", syncData.headerSync[0])
+		msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", syncData.headerSync)
 		signdMsg, err := em.createCosmosTx([]ctypes.Msg{msg})
 		if err != nil {
 			return syncData, err

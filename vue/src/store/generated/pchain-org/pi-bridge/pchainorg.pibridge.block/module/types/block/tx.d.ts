@@ -6,7 +6,7 @@ export interface MsgCreateBlock {
     index: string;
     chainID: number;
     address: string;
-    headers: string;
+    headers: string[];
 }
 export interface MsgCreateBlockResponse {
 }
@@ -15,7 +15,7 @@ export interface MsgUpdateBlock {
     index: string;
     chainID: number;
     address: string;
-    headers: string;
+    headers: string[];
 }
 export interface MsgUpdateBlockResponse {
 }

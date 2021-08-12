@@ -5,7 +5,7 @@ export interface Block {
     index: string;
     chainID: number;
     address: string;
-    headers: string;
+    headers: string[];
 }
 export declare const Block: {
     encode(message: Block, writer?: Writer): Writer;

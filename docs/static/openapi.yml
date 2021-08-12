@@ -19500,7 +19500,9 @@ paths:
                     address:
                       type: string
                     headers:
-                      type: string
+                      type: array
+                      items:
+                        type: string
               pagination:
                 type: object
                 properties:
@@ -19620,7 +19622,9 @@ paths:
                   address:
                     type: string
                   headers:
-                    type: string
+                    type: array
+                    items:
+                      type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30641,7 +30645,9 @@ definitions:
       address:
         type: string
       headers:
-        type: string
+        type: array
+        items:
+          type: string
   pchainorg.pibridge.block.MsgCreateBlockResponse:
     type: object
   pchainorg.pibridge.block.MsgDeleteBlockResponse:
@@ -30666,7 +30672,9 @@ definitions:
             address:
               type: string
             headers:
-              type: string
+              type: array
+              items:
+                type: string
       pagination:
         type: object
         properties:
@@ -30708,7 +30716,9 @@ definitions:
           address:
             type: string
           headers:
-            type: string
+            type: array
+            items:
+              type: string
   pchainorg.pibridge.chain.Chain:
     type: object
     properties:

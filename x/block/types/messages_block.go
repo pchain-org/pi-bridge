@@ -7,7 +7,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateBlock{}
 
-func NewMsgCreateBlock(creator string, index string, chainID int32, address string, headers string) *MsgCreateBlock {
+func NewMsgCreateBlock(creator string, index string, chainID int32, address string, headers []string) *MsgCreateBlock {
 	return &MsgCreateBlock{
 		Creator: creator,
 		Index:   index,
@@ -48,7 +48,7 @@ func (msg *MsgCreateBlock) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateBlock{}
 
-func NewMsgUpdateBlock(creator string, index string, chainID int32, address string, headers string) *MsgUpdateBlock {
+func NewMsgUpdateBlock(creator string, index string, chainID int32, address string, headers []string) *MsgUpdateBlock {
 	return &MsgUpdateBlock{
 		Creator: creator,
 		Index:   index,

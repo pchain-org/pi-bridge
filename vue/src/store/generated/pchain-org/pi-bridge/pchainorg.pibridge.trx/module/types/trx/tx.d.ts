@@ -18,6 +18,7 @@ export interface MsgCreateTrx {
     chainID: number;
     address: string;
     crossChainMsgs: string;
+    proof: string;
 }
 export interface MsgCreateTrxResponse {
 }

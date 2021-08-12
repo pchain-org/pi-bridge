@@ -66,7 +66,7 @@ func ConvertEHeaderToHeader(eheader types.Header) Header {
 	newHeader.Extra = eheader.Extra
 	newHeader.MixDigest = eheader.MixDigest
 	newHeader.Nonce = eheader.Nonce
-	newHeader.BaseFee = eheader.BaseFee
+	// newHeader.BaseFee = eheader.BaseFee
 
 	return newHeader
 }

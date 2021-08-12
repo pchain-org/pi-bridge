@@ -10,5 +10,5 @@ message Block {
   string index = 2;
   int32 chainID = 3; 
   string address = 4; 
-  string headers = 5; 
+  repeated string headers = 5; 
 }

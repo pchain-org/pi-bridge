@@ -198,7 +198,7 @@ export const MsgCrossChainTransferResponse = {
         return message;
     }
 };
-const baseMsgCreateTrx = { creator: '', index: '', chainID: 0, address: '', crossChainMsgs: '' };
+const baseMsgCreateTrx = { creator: '', index: '', chainID: 0, address: '', crossChainMsgs: '', proof: '' };
 export const MsgCreateTrx = {
     encode(message, writer = Writer.create()) {
         if (message.creator !== '') {
@@ -215,6 +215,9 @@ export const MsgCreateTrx = {
         }
         if (message.crossChainMsgs !== '') {
             writer.uint32(42).string(message.crossChainMsgs);
+        }
+        if (message.proof !== '') {
+            writer.uint32(50).string(message.proof);
         }
         return writer;
     },
@@ -239,6 +242,9 @@ export const MsgCreateTrx = {
                     break;
                 case 5:
                     message.crossChainMsgs = reader.string();
+                    break;
+                case 6:
+                    message.proof = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -279,6 +285,12 @@ export const MsgCreateTrx = {
         else {
             message.crossChainMsgs = '';
         }
+        if (object.proof !== undefined && object.proof !== null) {
+            message.proof = String(object.proof);
+        }
+        else {
+            message.proof = '';
+        }
         return message;
     },
     toJSON(message) {
@@ -288,6 +300,7 @@ export const MsgCreateTrx = {
         message.chainID !== undefined && (obj.chainID = message.chainID);
         message.address !== undefined && (obj.address = message.address);
         message.crossChainMsgs !== undefined && (obj.crossChainMsgs = message.crossChainMsgs);
+        message.proof !== undefined && (obj.proof = message.proof);
         return obj;
     },
     fromPartial(object) {
@@ -321,6 +334,12 @@ export const MsgCreateTrx = {
         }
         else {
             message.crossChainMsgs = '';
+        }
+        if (object.proof !== undefined && object.proof !== null) {
+            message.proof = object.proof;
+        }
+        else {
+            message.proof = '';
         }
         return message;
     }

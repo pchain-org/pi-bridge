@@ -16,7 +16,7 @@ export interface BlockBlock {
   /** @format int32 */
   chainID?: number;
   address?: string;
-  headers?: string;
+  headers?: string[];
 }
 
 export type BlockMsgCreateBlockResponse = object;

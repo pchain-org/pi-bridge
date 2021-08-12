@@ -30,13 +30,17 @@ func CmdCreateTrx() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			proof, err := cast.ToStringE(args[4])
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateTrx(clientCtx.GetFromAddress().String(), index, argsChainID, argsAddress, argsCrossChainMsgs)
+			msg := types.NewMsgCreateTrx(clientCtx.GetFromAddress().String(), index, argsChainID, argsAddress, argsCrossChainMsgs, proof)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
