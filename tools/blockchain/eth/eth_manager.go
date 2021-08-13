@@ -3,7 +3,6 @@ package eth
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -17,6 +16,7 @@ import (
 	cctypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	ctypes "github.com/cosmos/cosmos-sdk/types"
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/ethereum/go-ethereum"
@@ -35,8 +35,10 @@ import (
 	trxtypes "github.com/pchain-org/pi-bridge/x/trx/types"
 	"github.com/polynetwork/eth-contracts/go_abi/eccd_abi"
 	"github.com/polynetwork/eth-contracts/go_abi/eccm_abi"
+	"github.com/tendermint/tendermint/rpc/client/http"
 	tdmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tdmtypes "github.com/tendermint/tendermint/types"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -47,6 +49,7 @@ type EthManager struct {
 	cfg           *config.ServiceConfig
 	restClient    *common.RestClient
 	ethClient     *ethclient.Client
+	bridgeClient  *http.HTTP
 	currentHeight uint64
 	forceHeight   uint64
 
@@ -59,13 +62,13 @@ type EthManager struct {
 	CMCdc    *codec.AminoCodec
 
 	senders []*EthSender
+	cdc     codec.ProtoCodecMarshaler
 }
 
 type SyncHeader struct {
-	latestHeight  uint64
-	endHeight     uint64
-	headerSync    []string
-	signdHeaderTx string
+	latestHeight uint64
+	endHeight    uint64
+	headerSync   []string
 }
 
 type SyncCrossTx struct {
@@ -93,9 +96,14 @@ func (seq *CosmosSeq) GetAndAdd() uint64 {
 	return seq.val
 }
 
-func NewEthManager(ctx ctypes.Context, cfg *config.ServiceConfig, authKeeper authkeeper.AccountKeeper) (*EthManager, error) {
+func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *config.ServiceConfig, authKeeper authkeeper.AccountKeeper) (*EthManager, error) {
 	restClient := common.NewRestClient()
 	ethClient, err := common.GetEthClient(cfg.ETHConfig)
+	bridgeSdk, err := http.New(cfg.BridgeConfig.BridgeRpcAddr, "/websocket")
+	if err != nil {
+		log.Errorf("startServer - failed to new Tendermint Cli: %v", err)
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -148,62 +156,78 @@ func NewEthManager(ctx ctypes.Context, cfg *config.ServiceConfig, authKeeper aut
 	}
 
 	em := &EthManager{
-		cfg:        cfg,
-		restClient: restClient,
-		ethClient:  ethClient,
-		CMAcc:      CMAcc,
-		CMPrivk:    CMPrivk,
-		CMSeq:      CMSeq,
-		CMAccNum:   acc.GetAccountNumber(),
-		CMFees:     CMFees,
-		CMGas:      CMGas,
+		cfg:          cfg,
+		restClient:   restClient,
+		ethClient:    ethClient,
+		CMAcc:        CMAcc,
+		CMPrivk:      CMPrivk,
+		CMSeq:        CMSeq,
+		CMAccNum:     acc.GetAccountNumber(),
+		CMFees:       CMFees,
+		CMGas:        CMGas,
+		bridgeClient: bridgeSdk,
+		cdc:          cdc,
 	}
 	return em, nil
 }
 
-// SyncHeader fetch block from ethereum chain
-// ethConfig: get from app
+// SyncHeader fetch block headers and locked deposit events from ethereum chain
 // curHeight: current eth height in pi-bridge
-func (em *EthManager) SyncHeader(curHeight uint64) (*SyncHeader, error) {
+func (em *EthManager) SyncHeadersAndEvents(curHeight uint64) {
 	cfg := em.cfg.ETHConfig
-	// 1. get lastest height
+	ccMsgs := make([]*trxtypes.MsgCreateTrx, 0)
+	var headerSync []string
+	// 1. get eth lastest height
 	latestHeight, err := common.GetEthHeight(cfg.RestURL, em.restClient)
 	if err != nil {
-		log.Errorf("SyncHeader - cannot get node height, err: %s", err)
-		return nil, err
-	}
-	syncData := &SyncHeader{
-		latestHeight: latestHeight,
+		log.Errorf("SyncHeadersAndEvents - cannot get eth node height, err: %s", err)
+		return
 	}
 	if latestHeight-curHeight <= config.ETH_USEFUL_BLOCK_NUM {
-		return syncData, nil
+		return
 	}
-	// 2. fetch blocks and locked deposit events
+	// 2. fetch eth blocks
 	height := curHeight + 1
 	for ; height < latestHeight-config.ETH_USEFUL_BLOCK_NUM; height++ {
 		hdr := em.GetHeader(height)
 		if hdr == "" {
 			break
 		}
-		syncData.headerSync = append(syncData.headerSync, hdr)
+		headerSync = append(headerSync, hdr)
 		if err != nil {
 			break
 		}
-		if len(syncData.headerSync) >= cfg.HeadersPerBatch {
+		// get locked deposit events
+		ccMsgs, err = em.fetchLockDepositEvents(height)
+		if err != nil {
+			log.Errorf("SyncHeadersAndEvents - cannot fetch lock deposit events, err: %s", err)
+			return
+		}
+		// batch control
+		if len(headerSync) >= cfg.HeadersPerBatch {
 			break
 		}
 	}
-	if len(syncData.headerSync) > 0 {
+	// 3. commit headers to pi bridge
+	if len(headerSync) > 0 {
 		index := strconv.FormatUint(cfg.SideChainId, 10)
-		msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", syncData.headerSync)
-		signdMsg, err := em.createCosmosTx([]ctypes.Msg{msg})
+		msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", headerSync)
+		_, err := em.commitCosmosTx([]ctypes.Msg{msg})
 		if err != nil {
-			return syncData, err
+			log.Errorf("SyncHeadersAndEvents - commit headers message: %s, err: %s", msg.String(), err)
+			return
 		}
-		syncData.endHeight += uint64(len(syncData.headerSync))
-		syncData.signdHeaderTx = signdMsg
 	}
-	return syncData, nil
+	// 4. commit locked deposit events to pi bridge
+	if len(ccMsgs) > 0 {
+		for _, msg := range ccMsgs {
+			_, err := em.commitCosmosTx([]ctypes.Msg{msg})
+			if err != nil {
+				log.Errorf("SyncHeadersAndEvents - commit locked deposit events message: %s, err: %s", msg.String(), err)
+				return
+			}
+		}
+	}
 }
 
 func (em *EthManager) GetLatestHight() uint64 {
@@ -226,9 +250,10 @@ func (em *EthManager) GetHeader(height uint64) string {
 	return hex.EncodeToString(rawHdr)
 }
 
-func (em *EthManager) createCosmosTx(msgs []ctypes.Msg) (string, error) {
+func (em *EthManager) commitCosmosTx(msgs []ctypes.Msg) (string, error) {
 	seq := em.CMSeq.GetAndAdd()
 	encCfg := simapp.MakeTestEncodingConfig()
+	// txConfig := authtx.NewTxConfig(em.cdc, authtx.DefaultSignModes)
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgs...)
 	if err != nil {
@@ -254,28 +279,50 @@ func (em *EthManager) createCosmosTx(msgs []ctypes.Msg) (string, error) {
 	}
 
 	// Generate a JSON string.
-	txJSONBytes, err := encCfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
 		return "", err
 	}
-	txJSON := string(txJSONBytes)
-	return txJSON, nil
+	err = em.sendTx(context.Background(), txBytes)
+	return "", err
 }
 
-func (em *EthManager) GetLockDepositEvents(height uint64) (*SyncCrossTx, error) {
+func (em *EthManager) sendTx(ctx context.Context, txBytes []byte) error {
+	// Create a connection to the gRPC server.
+	grpcConn, err := grpc.Dial(
+		em.cfg.BridgeConfig.BridgeRpcAddr,
+		// "127.0.0.1:9090",    // Or your gRPC server address.
+		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+	)
+	if err != nil {
+		return err
+	}
+	defer grpcConn.Close()
+
+	txClient := typestx.NewServiceClient(grpcConn)
+	grpcRes, err := txClient.BroadcastTx(
+		ctx,
+		&typestx.BroadcastTxRequest{
+			Mode:    typestx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
+
+	return nil
+}
+
+func (em *EthManager) fetchLockDepositEvents(height uint64) ([]*trxtypes.MsgCreateTrx, error) {
 	cfg := em.cfg.ETHConfig
-	latestHeight := em.GetLatestHight()
-	syncCrossTx := &SyncCrossTx{
-		latestHeight: latestHeight,
-		endHeight:    height,
-	}
-	if latestHeight <= height+cfg.BlockConfig {
-		return syncCrossTx, errors.New("OUT_OF_SAFE_BLOCK")
-	}
+	ccMsgs := make([]*trxtypes.MsgCreateTrx, 0)
 	lockAddress := ethcommon.HexToAddress(cfg.ECCMContractAddress)
 	lockContract, err := eccm_abi.NewEthCrossChainManager(lockAddress, em.ethClient)
 	if err != nil {
-		return syncCrossTx, err
+		return nil, err
 	}
 	opt := &bind.FilterOpts{
 		Start:   height,
@@ -284,12 +331,12 @@ func (em *EthManager) GetLockDepositEvents(height uint64) (*SyncCrossTx, error) 
 	}
 	events, err := lockContract.FilterCrossChainEvent(opt, nil)
 	if err != nil {
-		log.Errorf("GetLockDepositEvents - FilterCrossChainEvent error :%s", err.Error())
-		return syncCrossTx, err
+		log.Errorf("fetchLockDepositEvents - FilterCrossChainEvent error :%s", err.Error())
+		return nil, err
 	}
 	if events == nil {
-		log.Infof("GetLockDepositEvents - no events found on FilterCrossChainEvent")
-		return syncCrossTx, err
+		log.Infof("fetchLockDepositEvents - no events found on FilterCrossChainEvent")
+		return nil, err
 	}
 	for events.Next() {
 		evt := events.Event
@@ -329,27 +376,37 @@ func (em *EthManager) GetLockDepositEvents(height uint64) (*SyncCrossTx, error) 
 			value:   []byte(evt.Rawdata),
 			height:  height,
 		}
-		log.Infof("GetLockDepositEvents -  height: %d", height)
+		log.Infof("fetchLockDepositEvents -  height: %d", height)
 
-		// get proof
+		// Get proof
 		proof, err := em.GetProof(crossTx, height)
 		if err != nil {
-			log.Errorf("GetLockDepositEvents - GetProof error :%s", err.Error())
+			log.Errorf("fetchLockDepositEvents - GetProof error :%s", err.Error())
 			return nil, err
 		}
 		msg := trxtypes.NewMsgCreateTrx(em.CMAcc.String(), common.EncodeBigInt(index), int32(cfg.SideChainId), "",
 			hex.EncodeToString(crossTx.value), hex.EncodeToString(proof))
-		signdMsg, err := em.createCosmosTx([]ctypes.Msg{msg})
-		if err != nil {
-			return nil, err
-		}
-		txData := TxData{
-			txSync:  hex.EncodeToString(crossTx.value),
-			signdTx: signdMsg,
-		}
-		syncCrossTx.txs = append(syncCrossTx.txs, txData)
+		ccMsgs = append(ccMsgs, msg)
 	}
-	return syncCrossTx, nil
+	return ccMsgs, nil
+}
+
+// SyncLockDepositEvents sync lock deposit events by height
+func (em *EthManager) SyncLockDepositEvents(height uint64) {
+	cfg := em.cfg.ETHConfig
+	latestHeight := em.GetLatestHight()
+	if latestHeight <= height+cfg.BlockConfig {
+		return
+	}
+	ccMsg, _ := em.fetchLockDepositEvents(height)
+	if len(ccMsg) > 0 {
+		for _, msg := range ccMsg {
+			_, err := em.commitCosmosTx([]ctypes.Msg{msg})
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 func (em *EthManager) GetProof(crossTx *CrossTransfer, refHeight uint64) ([]byte, error) {

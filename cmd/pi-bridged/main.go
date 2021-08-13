@@ -19,6 +19,8 @@ func main() {
 		// this line is used by starport scaffolding # root/arguments
 	)
 
+	// rootCmd.PersistentFlags().String("cs_config", config.DEFAULT_CONFIG_FILE_NAME, "cross chain config")
+
 	if err := svrcmd.Execute(rootCmd, app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}
