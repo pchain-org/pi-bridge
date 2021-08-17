@@ -263,8 +263,9 @@ func New(
 ) cosmoscmd.App {
 
 	// load config
-	var ConfigPath string
-	servConfig := cfg.NewServiceConfig(ConfigPath)
+	// var ConfigPath string
+	// cmd.PersistentFlags().Lookup("cs_config")
+	servConfig := cfg.NewServiceConfig("./cs_config.json")
 	if servConfig == nil {
 		tmos.Exit("startServer - create config failed!")
 	}

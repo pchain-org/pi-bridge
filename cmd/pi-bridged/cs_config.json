@@ -1,0 +1,39 @@
+{
+    "BridgeConfig": {
+        "BridgeRPCAddr": "http://127.0.0.1:26657",
+        "BridgeWallet": "/Users/terry/dev/cosmos/cosmos_key",
+        "BridgeWalletPWD": "12345678",
+        "BridgeStartHeight": 0,
+        "BridgeListenInterval": 1,
+        "BridgeChainID": "cosmos-chain-id",
+        "BridgeGasPrice": "0.000001stake",
+        "BridgeGas": 200000
+    },
+    "ETHConfig": {
+        "SideChainId": 2,
+        "RestURL": "http://127.0.0.1:7545",
+        "ECCMContractAddress": "0x68f7a309BAa73B8D7ddBe0d2A297dbce52D330De",
+        "ECCDContractAddress": "0x77D92C9e510623E6d3a371187e348fEcE222503F",
+        "KeyStorePath": "/Users/terry/eth/dev/keystore",
+        "KeyStorePwdSet": {
+            "0xa74320f2f8ad2caf05e43864938af0c56f2c2af5":"",
+            "0xb858669fb32ea6e29d60802a8a7e8402cb01a6f2": "123456"
+        },
+        "BlockConfig": 12,
+        "HeadersPerBatch": 500,
+        "MonitorInterval": 3,
+        "TargetContracts": [
+            {
+                "0xD8aE73e06552E...bcAbf9277a1aac99": {
+                    "inbound": [
+                        6
+                    ],
+                    "outbound": [
+                        6
+                    ]
+                }
+            }
+        ]
+    },
+    "RoutineNum": 64
+}

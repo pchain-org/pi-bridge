@@ -15,9 +15,9 @@ const (
 	ETH_MONITOR_INTERVAL    = 15 * time.Second
 	BEIDGE_MONITOR_INTERVAL = 1 * time.Second
 
-	ETH_USEFUL_BLOCK_NUM     = 3
+	ETH_USEFUL_BLOCK_NUM     = 12
 	ETH_PROOF_USERFUL_BLOCK  = 12
-	ONT_USEFUL_BLOCK_NUM     = 1
+	PI_USEFUL_BLOCK_NUM      = 1
 	DEFAULT_CONFIG_FILE_NAME = "./cs_config.json"
 	Version                  = "1.0"
 )
