@@ -175,7 +175,7 @@ func GetProof(url string, contractAddress string, key string, blockheight string
 	if err != nil {
 		return nil, fmt.Errorf("GetProof, Marshal result err: %s", err)
 	}
-	//fmt.Printf("proof res is:%s\n", string(result))
+	// fmt.Printf("proof res is:%s\n", string(result))
 	return result, nil
 }
 

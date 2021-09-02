@@ -45,7 +45,7 @@ func (h *Handler) MakeDepositProposal(params common.EntranceParam) (*common.Make
 		return nil, fmt.Errorf("VerifyFromEthProof, verifyMerkleProof error:%v", err)
 	}
 	if proofResult == nil {
-		return nil, fmt.Errorf("VerifyFromEthProof, verifyMerkleProof failed!")
+		return nil, fmt.Errorf("VerifyFromEthProof, verifyMerkleProof failed!\n")
 	}
 
 	if !common.CheckProofResult(proofResult, params.Extra) {

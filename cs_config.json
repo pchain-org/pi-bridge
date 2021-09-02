@@ -10,21 +10,19 @@
         "BridgeGas": 200000
     },
     "ETHConfig": {
-        "SideChainId": 2,
-        "RestURL": "http://127.0.0.1:7545",
-        "ECCMContractAddress": "0x68f7a309BAa73B8D7ddBe0d2A297dbce52D330De",
-        "ECCDContractAddress": "0x77D92C9e510623E6d3a371187e348fEcE222503F",
+        "SideChainId": 1,
+        "RestURL": "http://127.0.0.1:8545",
+        "BridgeContractAddress": "0xc50FDEAB1cfE04bA8D9ECf7fA361821FCa36DeD9",
         "KeyStorePath": "/Users/terry/eth/dev/keystore",
         "KeyStorePwdSet": {
-            "0xa74320f2f8ad2caf05e43864938af0c56f2c2af5":"",
             "0xb858669fb32ea6e29d60802a8a7e8402cb01a6f2": "123456"
         },
-        "BlockConfig": 12,
+        "BlockConfig": 0,
         "HeadersPerBatch": 500,
         "MonitorInterval": 3,
         "TargetContracts": [
             {
-                "0xD8aE73e06552E...bcAbf9277a1aac99": {
+                "0x028c4ec6EB970D42F94b66C14ac6196831C6a00F": {
                     "inbound": [
                         6
                     ],

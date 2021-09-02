@@ -19,13 +19,10 @@ import (
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pchain-org/pi-bridge/tools/blockchain/common"
 	"github.com/pchain-org/pi-bridge/tools/config"
@@ -33,11 +30,10 @@ import (
 	"github.com/pchain-org/pi-bridge/tools/types"
 	blockmoduletypes "github.com/pchain-org/pi-bridge/x/block/types"
 	trxtypes "github.com/pchain-org/pi-bridge/x/trx/types"
-	"github.com/polynetwork/eth-contracts/go_abi/eccd_abi"
-	"github.com/polynetwork/eth-contracts/go_abi/eccm_abi"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	tdmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tdmtypes "github.com/tendermint/tendermint/types"
+	pbridge_abi "github.com/terry108/cross-chain-contract/pbridge_abi"
 	"google.golang.org/grpc"
 )
 
@@ -46,12 +42,12 @@ const (
 )
 
 type EthManager struct {
-	cfg           *config.ServiceConfig
-	restClient    *common.RestClient
-	ethClient     *ethclient.Client
-	bridgeClient  *http.HTTP
-	currentHeight uint64
-	forceHeight   uint64
+	cfg          *config.ServiceConfig
+	restClient   *common.RestClient
+	ethClient    *ethclient.Client
+	bridgeClient *http.HTTP
+	// currentHeight uint64
+	// forceHeight   uint64
 
 	CMPrivk  cctypes.PrivKey
 	CMAcc    ctypes.AccAddress
@@ -64,24 +60,6 @@ type EthManager struct {
 	senders []*EthSender
 	cdc     codec.ProtoCodecMarshaler
 }
-
-type SyncHeader struct {
-	latestHeight uint64
-	endHeight    uint64
-	headerSync   []string
-}
-
-type SyncCrossTx struct {
-	latestHeight uint64
-	endHeight    uint64
-	txs          []TxData
-}
-
-type TxData struct {
-	txSync  string
-	signdTx string
-}
-
 type CosmosSeq struct {
 	lock sync.Mutex
 	val  uint64
@@ -96,27 +74,31 @@ func (seq *CosmosSeq) GetAndAdd() uint64 {
 	return seq.val
 }
 
-func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *config.ServiceConfig, authKeeper authkeeper.AccountKeeper) (*EthManager, error) {
+func NewEthManager(ctx *ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *config.ServiceConfig, authKeeper *authkeeper.AccountKeeper) (*EthManager, error) {
 	restClient := common.NewRestClient()
 	ethClient, err := common.GetEthClient(cfg.ETHConfig)
+	if err != nil {
+		return nil, err
+	}
 	bridgeSdk, err := http.New(cfg.BridgeConfig.BridgeRpcAddr, "/websocket")
 	if err != nil {
 		log.Errorf("startServer - failed to new Tendermint Cli: %v", err)
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	CMPrivk, CMAcc, err := common.GetBridgePrivateKey(cfg.BridgeConfig.BridgeWallet, []byte(cfg.BridgeConfig.BridgeWalletPwd))
 	if err != nil {
 		return nil, err
 	}
 
 	var gasPrice ctypes.DecCoins
-	acc := authKeeper.GetAccount(ctx, CMAcc)
+	acc := authKeeper.GetAccount(*ctx, CMAcc)
 	CMSeq := &CosmosSeq{
 		lock: sync.Mutex{},
 		val:  acc.GetSequence(),
+	}
+	if gasPrice, err = ctypes.ParseDecCoins(cfg.BridgeConfig.BridgeGasPrice); err != nil {
+		return nil, err
 	}
 	CMFees, err := common.CalcCosmosFees(gasPrice, cfg.BridgeConfig.BridgeGas)
 	if err != nil {
@@ -124,7 +106,7 @@ func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *confi
 	}
 	CMGas := cfg.BridgeConfig.BridgeGas
 
-	contractabi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
+	contractabi, err := abi.JSON(strings.NewReader(pbridge_abi.PBridgeABI))
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +126,6 @@ func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *confi
 	for i, v := range senders {
 		v = &EthSender{}
 		v.acc = accArr[i]
-
 		v.ethClient = ethClient
 		v.keyStore = ks
 		v.config = cfg
@@ -159,6 +140,7 @@ func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *confi
 		cfg:          cfg,
 		restClient:   restClient,
 		ethClient:    ethClient,
+		senders:      senders,
 		CMAcc:        CMAcc,
 		CMPrivk:      CMPrivk,
 		CMSeq:        CMSeq,
@@ -188,7 +170,7 @@ func (em *EthManager) SyncHeadersAndEvents(curHeight uint64) {
 	}
 	// 2. fetch eth blocks
 	height := curHeight + 1
-	for ; height < latestHeight-config.ETH_USEFUL_BLOCK_NUM; height++ {
+	for ; height <= latestHeight-config.ETH_USEFUL_BLOCK_NUM; height++ {
 		hdr := em.GetHeader(height)
 		if hdr == "" {
 			break
@@ -198,7 +180,7 @@ func (em *EthManager) SyncHeadersAndEvents(curHeight uint64) {
 			break
 		}
 		// get locked deposit events
-		ccMsgs, err = em.fetchLockDepositEvents(height)
+		ccMsgs, err = em.fetchCrossOutFunds(height)
 		if err != nil {
 			log.Errorf("SyncHeadersAndEvents - cannot fetch lock deposit events, err: %s", err)
 			return
@@ -207,6 +189,12 @@ func (em *EthManager) SyncHeadersAndEvents(curHeight uint64) {
 		if len(headerSync) >= cfg.HeadersPerBatch {
 			break
 		}
+	}
+	for _, v := range headerSync {
+		fmt.Println(v)
+	}
+	for _, v := range ccMsgs {
+		fmt.Println(v.String())
 	}
 	// 3. commit headers to pi bridge
 	if len(headerSync) > 0 {
@@ -316,11 +304,12 @@ func (em *EthManager) sendTx(ctx context.Context, txBytes []byte) error {
 	return nil
 }
 
-func (em *EthManager) fetchLockDepositEvents(height uint64) ([]*trxtypes.MsgCreateTrx, error) {
+// fetch cross chain tx
+func (em *EthManager) fetchCrossOutFunds(height uint64) ([]*trxtypes.MsgCreateTrx, error) {
 	cfg := em.cfg.ETHConfig
 	ccMsgs := make([]*trxtypes.MsgCreateTrx, 0)
-	lockAddress := ethcommon.HexToAddress(cfg.ECCMContractAddress)
-	lockContract, err := eccm_abi.NewEthCrossChainManager(lockAddress, em.ethClient)
+	lockAddress := ethcommon.HexToAddress(cfg.BridgeContractAddress)
+	bridgeContract, err := pbridge_abi.NewPBridge(lockAddress, em.ethClient)
 	if err != nil {
 		return nil, err
 	}
@@ -329,63 +318,28 @@ func (em *EthManager) fetchLockDepositEvents(height uint64) ([]*trxtypes.MsgCrea
 		End:     &height,
 		Context: context.Background(),
 	}
-	events, err := lockContract.FilterCrossChainEvent(opt, nil)
+	events, err := bridgeContract.FilterCrossOutFunds(opt)
 	if err != nil {
-		log.Errorf("fetchLockDepositEvents - FilterCrossChainEvent error :%s", err.Error())
+		log.Errorf("fetchCrossOutFunds - FilterCrossChainEvent error :%s", err.Error())
 		return nil, err
 	}
 	if events == nil {
-		log.Infof("fetchLockDepositEvents - no events found on FilterCrossChainEvent")
+		log.Infof("fetchCrossOutFunds - no events found on FilterCrossChainEvent")
 		return nil, err
 	}
+
 	for events.Next() {
 		evt := events.Event
-		var isTarget bool
-		if len(cfg.TargetContracts) > 0 {
-			toContractStr := evt.ProxyOrAssetContract.String()
-			for _, v := range cfg.TargetContracts {
-				toChainIdArr, ok := v[toContractStr]
-				if ok {
-					if len(toChainIdArr["outbound"]) == 0 {
-						isTarget = true
-						break
-					}
-					for _, id := range toChainIdArr["outbound"] {
-						if id == evt.ToChainId {
-							isTarget = true
-							break
-						}
-					}
-					if isTarget {
-						break
-					}
-				}
-			}
-			if !isTarget {
-				continue
-			}
-		}
 		param := &common.MakeTxParam{}
-		_ = param.Deserialization(types.NewZeroCopySource([]byte(evt.Rawdata)))
-		index := big.NewInt(0)
-		index.SetBytes(evt.TxId)
-		crossTx := &CrossTransfer{
-			txIndex: common.EncodeBigInt(index),
-			txId:    evt.Raw.TxHash.Bytes(),
-			toChain: uint32(evt.ToChainId),
-			value:   []byte(evt.Rawdata),
-			height:  height,
-		}
-		log.Infof("fetchLockDepositEvents -  height: %d", height)
-
-		// Get proof
-		proof, err := em.GetProof(crossTx, height)
+		_ = param.Deserialization(types.NewZeroCopySource([]byte(evt.Raw.Data)))
+		proof, err := em.GetProof(evt.Raw.TxHash.String(), evt.Raw.BlockNumber)
 		if err != nil {
-			log.Errorf("fetchLockDepositEvents - GetProof error :%s", err.Error())
+			log.Errorf("fetchCrossOutFunds - GetProof error :%s", err.Error())
 			return nil, err
 		}
-		msg := trxtypes.NewMsgCreateTrx(em.CMAcc.String(), common.EncodeBigInt(index), int32(cfg.SideChainId), "",
-			hex.EncodeToString(crossTx.value), hex.EncodeToString(proof))
+		fmt.Println("proof:", hex.EncodeToString(proof))
+		msg := trxtypes.NewMsgCreateTrx(em.CMAcc.String(), evt.Raw.TxHash.String(), int32(cfg.SideChainId), "",
+			hex.EncodeToString(evt.Raw.Data), hex.EncodeToString(proof))
 		ccMsgs = append(ccMsgs, msg)
 	}
 	return ccMsgs, nil
@@ -398,7 +352,7 @@ func (em *EthManager) SyncLockDepositEvents(height uint64) {
 	if latestHeight <= height+cfg.BlockConfig {
 		return
 	}
-	ccMsg, _ := em.fetchLockDepositEvents(height)
+	ccMsg, _ := em.fetchCrossOutFunds(height)
 	if len(ccMsg) > 0 {
 		for _, msg := range ccMsg {
 			_, err := em.commitCosmosTx([]ctypes.Msg{msg})
@@ -409,23 +363,12 @@ func (em *EthManager) SyncLockDepositEvents(height uint64) {
 	}
 }
 
-func (em *EthManager) GetProof(crossTx *CrossTransfer, refHeight uint64) ([]byte, error) {
+func (em *EthManager) GetProof(txIndex string, txHeight uint64) ([]byte, error) {
 	cfg := em.cfg.ETHConfig
-	key := crossTx.txIndex
-	keyBytes, err := common.MappingKeyAt(key, "01")
+	heightHex := hexutil.EncodeBig(big.NewInt(int64(txHeight)))
+	proof, err := common.GetProof(cfg.RestURL, cfg.BridgeContractAddress, txIndex, heightHex, em.restClient)
 	if err != nil {
-		log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
-		return nil, err
-	}
-	if refHeight <= crossTx.height+cfg.BlockConfig {
-		return nil, nil
-	}
-	height := int64(refHeight - cfg.BlockConfig)
-	heightHex := hexutil.EncodeBig(big.NewInt(height))
-	proofKey := hexutil.Encode(keyBytes)
-	proof, err := common.GetProof(cfg.RestURL, cfg.ECCDContractAddress, proofKey, heightHex, em.restClient)
-	if err != nil {
-		log.Errorf("handleLockDepositEvents - error :%s\n", err.Error())
+		log.Errorf("GetProof - error :%s\n", err.Error())
 	}
 	return proof, nil
 }
@@ -524,144 +467,4 @@ type BridgeTx struct {
 	Proof       []byte
 	PVal        []byte
 	ChainID     uint64
-}
-
-type EthSender struct {
-	acc          accounts.Account
-	keyStore     *common.EthKeyStore
-	cmap         map[string]chan *EthTxInfo
-	nonceManager *common.NonceManager
-	ethClient    *ethclient.Client
-	config       *config.ServiceConfig
-	contractAbi  *abi.ABI
-}
-
-type EthTxInfo struct {
-	txData       []byte
-	gasLimit     uint64
-	gasPrice     *big.Int
-	contractAddr ethcommon.Address
-	bridgeTxHash string
-}
-
-func (es *EthSender) Balance() (*big.Int, error) {
-	balance, err := es.ethClient.BalanceAt(context.Background(), es.acc.Address, nil)
-	if err != nil {
-		return nil, err
-	}
-	return balance, nil
-}
-
-func (es *EthSender) getRouter() string {
-	return strconv.FormatInt(rand.Int63n(es.config.RoutineNum), 10)
-}
-
-func (es *EthSender) sendTxToEth(info *EthTxInfo) error {
-	nonce := es.nonceManager.GetAddressNonce(es.acc.Address)
-	tx := ethtypes.NewTransaction(nonce, info.contractAddr, big.NewInt(0), info.gasLimit, info.gasPrice, info.txData)
-	signedtx, err := es.keyStore.SignTransaction(tx, es.acc)
-	if err != nil {
-		es.nonceManager.ReturnNonce(es.acc.Address, nonce)
-		return fmt.Errorf("commitDepositEventsWithHeader - sign raw tx error and return nonce %d: %v", nonce, err)
-	}
-	err = es.ethClient.SendTransaction(context.Background(), signedtx)
-	if err != nil {
-		es.nonceManager.ReturnNonce(es.acc.Address, nonce)
-		return fmt.Errorf("commitDepositEventsWithHeader - send transaction error and return nonce %d: %v", nonce, err)
-	}
-	hash := signedtx.Hash()
-
-	isSuccess := es.waitTransactionConfirm(info.bridgeTxHash, hash)
-	if isSuccess {
-		log.Infof("successful to relay tx to ethereum: (eth_hash: %s, nonce: %d, poly_hash: %s, eth_explorer: %s)",
-			hash.String(), nonce, info.bridgeTxHash, common.GetExplorerUrl(es.keyStore.GetChainId())+hash.String())
-	} else {
-		log.Errorf("failed to relay tx to ethereum: (eth_hash: %s, nonce: %d, poly_hash: %s, eth_explorer: %s)",
-			hash.String(), nonce, info.bridgeTxHash, common.GetExplorerUrl(es.keyStore.GetChainId())+hash.String())
-	}
-	return nil
-}
-
-// TODO: check the status of tx
-func (es *EthSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool {
-	for {
-		time.Sleep(time.Second * 1)
-		_, ispending, err := es.ethClient.TransactionByHash(context.Background(), hash)
-		if err != nil {
-			continue
-		}
-		log.Debugf("( eth_transaction %s, poly_tx %s ) is pending: %v", hash.String(), polyTxHash, ispending)
-		if ispending {
-			continue
-		} else {
-			receipt, err := es.ethClient.TransactionReceipt(context.Background(), hash)
-			if err != nil {
-				continue
-			}
-			return receipt.Status == ethtypes.ReceiptStatusSuccessful
-		}
-	}
-}
-
-func (es *EthSender) commitDepositEventsWithHeader(header *BridgeHeader, tx *BridgeTx) bool {
-	eccdAddr := ethcommon.HexToAddress(es.config.ETHConfig.ECCDContractAddress)
-	eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, es.ethClient)
-	if err != nil {
-		panic(fmt.Errorf("failed to new eccm: %v", err))
-	}
-	// TODO check tx
-	fromTx := [32]byte{}
-	// copy(fromTx[:], param.TxHash[:32])
-	res, _ := eccd.CheckIfFromChainTxExist(nil, tx.ChainID, fromTx)
-	if res {
-		// log.Debugf("already relayed to eth: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
-		// 	param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
-		return true
-	}
-
-	headerdata := header.Header
-	txData, err := es.contractAbi.Pack("verifyHeaderAndExecuteTx", headerdata, header.Valsets, header.Valsets)
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())
-		return false
-	}
-
-	gasPrice, err := es.ethClient.SuggestGasPrice(context.Background())
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - get suggest sas price failed error: %s", err.Error())
-		return false
-	}
-	contractaddr := ethcommon.HexToAddress(es.config.ETHConfig.ECCMContractAddress)
-	callMsg := ethereum.CallMsg{
-		From: es.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
-		Value: big.NewInt(0), Data: txData,
-	}
-	gasLimit, err := es.ethClient.EstimateGas(context.Background(), callMsg)
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - estimate gas limit error: %s", err.Error())
-		return false
-	}
-
-	k := es.getRouter()
-	c, ok := es.cmap[k]
-	if !ok {
-		c = make(chan *EthTxInfo, ChanLen)
-		es.cmap[k] = c
-		go func() {
-			for v := range c {
-				if err = es.sendTxToEth(v); err != nil {
-					log.Errorf("failed to send tx to ethereum: error: %v, txData: %s", err, hex.EncodeToString(v.txData))
-				}
-			}
-		}()
-	}
-	//TODO: could be blocked
-	c <- &EthTxInfo{
-		txData:       txData,
-		contractAddr: contractaddr,
-		gasPrice:     gasPrice,
-		gasLimit:     gasLimit,
-		bridgeTxHash: string(tx.Tx.Hash),
-	}
-	return true
 }

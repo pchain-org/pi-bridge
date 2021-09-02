@@ -1,6 +1,7 @@
 package common
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"strings"
@@ -68,4 +69,8 @@ func (ks *EthKeyStore) TestPwd(acc accounts.Account, pwd string) error {
 
 func (ks *EthKeyStore) GetChainId() uint64 {
 	return ks.chainId.Uint64()
+}
+
+func (ks *EthKeyStore) ImportECDSA(priv *ecdsa.PrivateKey, passphrase string) (accounts.Account, error) {
+	return ks.ks.ImportECDSA(priv, passphrase)
 }

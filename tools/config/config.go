@@ -15,8 +15,8 @@ const (
 	ETH_MONITOR_INTERVAL    = 15 * time.Second
 	BEIDGE_MONITOR_INTERVAL = 1 * time.Second
 
-	ETH_USEFUL_BLOCK_NUM     = 12
-	ETH_PROOF_USERFUL_BLOCK  = 12
+	ETH_USEFUL_BLOCK_NUM     = 1
+	ETH_PROOF_USERFUL_BLOCK  = 1
 	PI_USEFUL_BLOCK_NUM      = 1
 	DEFAULT_CONFIG_FILE_NAME = "./cs_config.json"
 	Version                  = "1.0"
@@ -42,16 +42,16 @@ type BridgeConfig struct {
 }
 
 type ETHConfig struct {
-	SideChainId         uint64
-	RestURL             string
-	ECCMContractAddress string
-	ECCDContractAddress string
-	KeyStorePath        string
-	KeyStorePwdSet      map[string]string
-	BlockConfig         uint64
-	HeadersPerBatch     int
-	MonitorInterval     uint64
-	TargetContracts     []map[string]map[string][]uint64
+	SideChainId           uint64
+	RestURL               string
+	BridgeContractAddress string
+	ECCDContractAddress   string
+	KeyStorePath          string
+	KeyStorePwdSet        map[string]string
+	BlockConfig           uint64
+	HeadersPerBatch       int
+	MonitorInterval       uint64
+	TargetContracts       []map[string]map[string][]uint64
 }
 
 func ReadFile(fileName string) ([]byte, error) {

@@ -11,8 +11,8 @@
     },
     "ETHConfig": {
         "SideChainId": 2,
-        "RestURL": "http://127.0.0.1:7545",
-        "ECCMContractAddress": "0x68f7a309BAa73B8D7ddBe0d2A297dbce52D330De",
+        "RestURL": "http://127.0.0.1:8545",
+        "BridgeContractAddress": "0x68f7a309BAa73B8D7ddBe0d2A297dbce52D330De",
         "ECCDContractAddress": "0x77D92C9e510623E6d3a371187e348fEcE222503F",
         "KeyStorePath": "/Users/terry/eth/dev/keystore",
         "KeyStorePwdSet": {
