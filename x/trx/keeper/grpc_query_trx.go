@@ -24,7 +24,7 @@ func (k Keeper) TrxAll(c context.Context, req *types.QueryAllTrxRequest) (*types
 
 	pageRes, err := query.Paginate(trxStore, req.Pagination, func(key []byte, value []byte) error {
 		var trx types.Trx
-		if err := k.cdc.UnmarshalBinaryBare(value, &trx); err != nil {
+		if err := k.cdc.UnmarshalInterface(value, &trx); err != nil {
 			return err
 		}
 

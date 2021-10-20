@@ -24,7 +24,7 @@ func (k Keeper) ProxyAll(c context.Context, req *types.QueryAllProxyRequest) (*t
 
 	pageRes, err := query.Paginate(proxyStore, req.Pagination, func(key []byte, value []byte) error {
 		var proxy types.Proxy
-		if err := k.cdc.UnmarshalBinaryBare(value, &proxy); err != nil {
+		if err := k.cdc.UnmarshalInterface(value, &proxy); err != nil {
 			return err
 		}
 

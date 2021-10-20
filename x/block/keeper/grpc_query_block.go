@@ -24,7 +24,7 @@ func (k Keeper) BlockAll(c context.Context, req *types.QueryAllBlockRequest) (*t
 
 	pageRes, err := query.Paginate(blockStore, req.Pagination, func(key []byte, value []byte) error {
 		var block types.Block
-		if err := k.cdc.UnmarshalBinaryBare(value, &block); err != nil {
+		if err := k.cdc.UnmarshalInterface(value, &block); err != nil {
 			return err
 		}
 

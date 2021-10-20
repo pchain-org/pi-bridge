@@ -11,6 +11,15 @@ import (
 
 func (k msgServer) CreateBlock(goCtx context.Context, msg *types.MsgCreateBlock) (*types.MsgCreateBlockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	fmt.Println("********************")
+	fmt.Println("block/CreateBlock/msg")
+	fmt.Println("********************")
+
+	fmt.Println(msg.Creator)
+	fmt.Println(msg.Index)
+	fmt.Println(msg.ChainID)
+	fmt.Println(msg.Address)
+	fmt.Println(msg.Headers)
 
 	// Check if the value already exists
 	_, isFound := k.GetBlock(ctx, msg.Index)

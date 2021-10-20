@@ -9,7 +9,7 @@ import (
 // SetNode set a specific node in the store from its index
 func (k Keeper) SetNode(ctx sdk.Context, node types.Node) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeKey))
-	b := k.cdc.MustMarshalBinaryBare(&node)
+	b := k.cdc.MustMarshal(&node)
 	store.Set(types.KeyPrefix(node.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetNode(ctx sdk.Context, index string) (val types.Node, found bo
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.UnmarshalInterface(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllNode(ctx sdk.Context) (list []types.Node) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Node
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.UnmarshalInterface(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

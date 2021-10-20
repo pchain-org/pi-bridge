@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"math/rand"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -28,13 +27,13 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pchain-org/pi-bridge/tools/blockchain/common"
+	"github.com/pchain-org/pi-bridge/tools/blockchain/eth/go_abi/eccd_abi"
+	"github.com/pchain-org/pi-bridge/tools/blockchain/eth/go_abi/eccm_abi"
 	"github.com/pchain-org/pi-bridge/tools/config"
 	"github.com/pchain-org/pi-bridge/tools/log"
 	"github.com/pchain-org/pi-bridge/tools/types"
 	blockmoduletypes "github.com/pchain-org/pi-bridge/x/block/types"
 	trxtypes "github.com/pchain-org/pi-bridge/x/trx/types"
-	"github.com/polynetwork/eth-contracts/go_abi/eccd_abi"
-	"github.com/polynetwork/eth-contracts/go_abi/eccm_abi"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	tdmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tdmtypes "github.com/tendermint/tendermint/types"
@@ -62,7 +61,7 @@ type EthManager struct {
 	CMCdc    *codec.AminoCodec
 
 	senders []*EthSender
-	cdc     codec.ProtoCodecMarshaler
+	cdc     codec.Codec
 }
 
 type SyncHeader struct {
@@ -96,7 +95,8 @@ func (seq *CosmosSeq) GetAndAdd() uint64 {
 	return seq.val
 }
 
-func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *config.ServiceConfig, authKeeper authkeeper.AccountKeeper) (*EthManager, error) {
+func NewEthManager(ctx ctypes.Context, cdc codec.Codec, cfg *config.ServiceConfig, authKeeper authkeeper.AccountKeeper) (*EthManager, error) {
+	fmt.Println("#############################")
 	restClient := common.NewRestClient()
 	ethClient, err := common.GetEthClient(cfg.ETHConfig)
 	bridgeSdk, err := http.New(cfg.BridgeConfig.BridgeRpcAddr, "/websocket")
@@ -108,52 +108,70 @@ func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *confi
 		return nil, err
 	}
 	CMPrivk, CMAcc, err := common.GetBridgePrivateKey(cfg.BridgeConfig.BridgeWallet, []byte(cfg.BridgeConfig.BridgeWalletPwd))
+	fmt.Println("NewEthManager/GetBridgePrivateKey")
+	fmt.Println(CMPrivk)
+	fmt.Println(CMAcc)
+	fmt.Println(err)
 	if err != nil {
 		return nil, err
 	}
 
 	var gasPrice ctypes.DecCoins
 	acc := authKeeper.GetAccount(ctx, CMAcc)
+	fmt.Println("NewEthManager/GetAccount")
+	fmt.Println(acc)
 	CMSeq := &CosmosSeq{
 		lock: sync.Mutex{},
 		val:  acc.GetSequence(),
 	}
+	fmt.Println("NewEthManager/CMSeq")
+	fmt.Println(CMSeq)
+
+	if gasPrice, err = ctypes.ParseDecCoins(cfg.BridgeConfig.BridgeGasPrice); err != nil {
+		return nil, err
+	}
+
 	CMFees, err := common.CalcCosmosFees(gasPrice, cfg.BridgeConfig.BridgeGas)
+	fmt.Println("NewEthManager/CMFees")
+	fmt.Println(err)
 	if err != nil {
 		return nil, err
 	}
+
 	CMGas := cfg.BridgeConfig.BridgeGas
+	fmt.Println("NewEthManager/CMGas")
+	fmt.Println(CMGas)
 
-	contractabi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
-	if err != nil {
-		return nil, err
-	}
-	chainId, err := ethClient.ChainID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	ks := common.NewEthKeyStore(cfg.ETHConfig, chainId)
-	accArr := ks.GetAccounts()
-	if len(cfg.ETHConfig.KeyStorePwdSet) == 0 {
-		fmt.Println("please input the passwords for ethereum keystore: ")
-	}
-	if err = ks.UnlockKeys(cfg.ETHConfig); err != nil {
-		return nil, err
-	}
-	senders := make([]*EthSender, len(accArr))
-	for i, v := range senders {
-		v = &EthSender{}
-		v.acc = accArr[i]
+	// contractabi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// chainId, err := ethClient.ChainID(context.Background())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// ks := common.NewEthKeyStore(cfg.ETHConfig, chainId)
+	// accArr := ks.GetAccounts()
+	// if len(cfg.ETHConfig.KeyStorePwdSet) == 0 {
+	// 	fmt.Println("please input the passwords for ethereum keystore: ")
+	// }
+	// if err = ks.UnlockKeys(cfg.ETHConfig); err != nil {
+	// 	return nil, err
+	// }
+	// senders := make([]*EthSender, len(accArr))
+	// for i, v := range senders {
+	// 	v = &EthSender{}
+	// 	v.acc = accArr[i]
 
-		v.ethClient = ethClient
-		v.keyStore = ks
-		v.config = cfg
-		v.contractAbi = &contractabi
-		v.nonceManager = common.NewNonceManager(ethClient)
-		v.cmap = make(map[string]chan *EthTxInfo)
+	// 	v.ethClient = ethClient
+	// 	v.keyStore = ks
+	// 	v.config = cfg
+	// 	v.contractAbi = &contractabi
+	// 	v.nonceManager = common.NewNonceManager(ethClient)
+	// 	v.cmap = make(map[string]chan *EthTxInfo)
 
-		senders[i] = v
-	}
+	// 	senders[i] = v
+	// }
 
 	em := &EthManager{
 		cfg:          cfg,
@@ -174,60 +192,63 @@ func NewEthManager(ctx ctypes.Context, cdc codec.ProtoCodecMarshaler, cfg *confi
 // SyncHeader fetch block headers and locked deposit events from ethereum chain
 // curHeight: current eth height in pi-bridge
 func (em *EthManager) SyncHeadersAndEvents(curHeight uint64) {
-	cfg := em.cfg.ETHConfig
-	ccMsgs := make([]*trxtypes.MsgCreateTrx, 0)
-	var headerSync []string
-	// 1. get eth lastest height
-	latestHeight, err := common.GetEthHeight(cfg.RestURL, em.restClient)
-	if err != nil {
-		log.Errorf("SyncHeadersAndEvents - cannot get eth node height, err: %s", err)
-		return
-	}
-	if latestHeight-curHeight <= config.ETH_USEFUL_BLOCK_NUM {
-		return
-	}
-	// 2. fetch eth blocks
-	height := curHeight + 1
-	for ; height < latestHeight-config.ETH_USEFUL_BLOCK_NUM; height++ {
-		hdr := em.GetHeader(height)
-		if hdr == "" {
-			break
-		}
-		headerSync = append(headerSync, hdr)
-		if err != nil {
-			break
-		}
-		// get locked deposit events
-		ccMsgs, err = em.fetchLockDepositEvents(height)
-		if err != nil {
-			log.Errorf("SyncHeadersAndEvents - cannot fetch lock deposit events, err: %s", err)
-			return
-		}
-		// batch control
-		if len(headerSync) >= cfg.HeadersPerBatch {
-			break
-		}
-	}
+	// cfg := em.cfg.ETHConfig
+	// ccMsgs := make([]*trxtypes.MsgCreateTrx, 0)
+	// var headerSync []string
+	// // 1. get eth lastest height
+	// latestHeight, err := common.GetEthHeight(cfg.RestURL, em.restClient)
+	// if err != nil {
+	// 	log.Errorf("SyncHeadersAndEvents - cannot get eth node height, err: %s", err)
+	// 	return
+	// }
+	// if latestHeight-curHeight <= config.ETH_USEFUL_BLOCK_NUM {
+	// 	return
+	// }
+	// // 2. fetch eth blocks
+	// height := curHeight + 1
+	// for ; height < latestHeight-config.ETH_USEFUL_BLOCK_NUM; height++ {
+	// 	hdr := em.GetHeader(height)
+	// 	if hdr == "" {
+	// 		break
+	// 	}
+	// 	headerSync = append(headerSync, hdr)
+	// 	if err != nil {
+	// 		break
+	// 	}
+	// 	// get locked deposit events
+	// 	ccMsgs, err = em.fetchLockDepositEvents(height)
+	// 	if err != nil {
+	// 		log.Errorf("SyncHeadersAndEvents - cannot fetch lock deposit events, err: %s", err)
+	// 		return
+	// 	}
+	// 	// batch control
+	// 	if len(headerSync) >= cfg.HeadersPerBatch {
+	// 		break
+	// 	}
+	// }
 	// 3. commit headers to pi bridge
+	headerSync := "100"
 	if len(headerSync) > 0 {
-		index := strconv.FormatUint(cfg.SideChainId, 10)
-		msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", headerSync)
+		// index := strconv.FormatUint(cfg.SideChainId, 10)
+		//msg := blockmoduletypes.NewMsgCreateBlock(em.CMAcc.String(), index, int32(cfg.SideChainId), "", headerSync)
+		msg := blockmoduletypes.NewMsgCreateBlock("test", "ETH", int32(1), "address1", nil)
+
 		_, err := em.commitCosmosTx([]ctypes.Msg{msg})
 		if err != nil {
 			log.Errorf("SyncHeadersAndEvents - commit headers message: %s, err: %s", msg.String(), err)
 			return
 		}
 	}
-	// 4. commit locked deposit events to pi bridge
-	if len(ccMsgs) > 0 {
-		for _, msg := range ccMsgs {
-			_, err := em.commitCosmosTx([]ctypes.Msg{msg})
-			if err != nil {
-				log.Errorf("SyncHeadersAndEvents - commit locked deposit events message: %s, err: %s", msg.String(), err)
-				return
-			}
-		}
-	}
+	// // 4. commit locked deposit events to pi bridge
+	// if len(ccMsgs) > 0 {
+	// 	for _, msg := range ccMsgs {
+	// 		_, err := em.commitCosmosTx([]ctypes.Msg{msg})
+	// 		if err != nil {
+	// 			log.Errorf("SyncHeadersAndEvents - commit locked deposit events message: %s, err: %s", msg.String(), err)
+	// 			return
+	// 		}
+	// 	}
+	// }
 }
 
 func (em *EthManager) GetLatestHight() uint64 {
@@ -256,6 +277,9 @@ func (em *EthManager) commitCosmosTx(msgs []ctypes.Msg) (string, error) {
 	// txConfig := authtx.NewTxConfig(em.cdc, authtx.DefaultSignModes)
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgs...)
+	fmt.Println("commitCosmosTx/txBuilder.SetMsgs/err")
+	fmt.Println("err")
+	fmt.Println(err)
 	if err != nil {
 		return "", err
 	}
@@ -263,27 +287,35 @@ func (em *EthManager) commitCosmosTx(msgs []ctypes.Msg) (string, error) {
 	txBuilder.SetFeeAmount(em.CMFees)
 
 	signerData := xauthsigning.SignerData{
-		// ChainID:       chainID,
+		ChainID:       em.cfg.BridgeConfig.BridgeChainId,
 		AccountNumber: em.CMAccNum,
 		Sequence:      seq,
 	}
 	sigV2, err := tx.SignWithPrivKey(
 		encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
 		txBuilder, em.CMPrivk, encCfg.TxConfig, seq)
+	fmt.Println("commitCosmosTx/tx.SignWithPrivKey")
+	fmt.Println(err)
 	if err != nil {
 		return "", err
 	}
 	err = txBuilder.SetSignatures(sigV2)
+	fmt.Println("commitCosmosTx/txBuilder.SetSignatures")
+	fmt.Println(err)
 	if err != nil {
 		return "", err
 	}
 
 	// Generate a JSON string.
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+	fmt.Println("commitCosmosTx/encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())")
+	fmt.Println(err)
 	if err != nil {
 		return "", err
 	}
 	err = em.sendTx(context.Background(), txBytes)
+	fmt.Println("commitCosmosTx/em.sendTx")
+	fmt.Println(err)
 	return "", err
 }
 
@@ -291,9 +323,14 @@ func (em *EthManager) sendTx(ctx context.Context, txBytes []byte) error {
 	// Create a connection to the gRPC server.
 	grpcConn, err := grpc.Dial(
 		em.cfg.BridgeConfig.BridgeRpcAddr,
-		// "127.0.0.1:9090",    // Or your gRPC server address.
+		// "127.0.0.1:26657",   // Or your gRPC server address.
 		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 	)
+	fmt.Println("****************************")
+	fmt.Println("****************************")
+	fmt.Println("****************************")
+	fmt.Println("sendTx/grpc.Dial")
+	fmt.Println(err)
 	if err != nil {
 		return err
 	}
@@ -303,13 +340,26 @@ func (em *EthManager) sendTx(ctx context.Context, txBytes []byte) error {
 	grpcRes, err := txClient.BroadcastTx(
 		ctx,
 		&typestx.BroadcastTxRequest{
-			Mode:    typestx.BroadcastMode_BROADCAST_MODE_SYNC,
+			Mode:    typestx.BroadcastMode_BROADCAST_MODE_BLOCK,
 			TxBytes: txBytes,
 		},
 	)
+	fmt.Println("sendTX")
+	fmt.Println("sendTx/NewServiceClient")
+	fmt.Println("ctx")
+	fmt.Println(ctx)
+	fmt.Println("BroadcastTxRequest/Mode")
+	fmt.Println(typestx.BroadcastMode_BROADCAST_MODE_SYNC)
+	fmt.Println("BroadcastTxRequest/TxBytes")
+	fmt.Println(txBytes)
+	fmt.Println("grpcRes")
+	fmt.Println(grpcRes)
+	fmt.Println("err")
+	fmt.Println(err)
 	if err != nil {
 		return err
 	}
+	fmt.Println("grpcRes.TxResponse.Code")
 
 	fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
 

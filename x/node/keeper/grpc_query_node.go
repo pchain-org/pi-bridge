@@ -24,7 +24,7 @@ func (k Keeper) NodeAll(c context.Context, req *types.QueryAllNodeRequest) (*typ
 
 	pageRes, err := query.Paginate(nodeStore, req.Pagination, func(key []byte, value []byte) error {
 		var node types.Node
-		if err := k.cdc.UnmarshalBinaryBare(value, &node); err != nil {
+		if err := k.cdc.UnmarshalInterface(value, &node); err != nil {
 			return err
 		}
 

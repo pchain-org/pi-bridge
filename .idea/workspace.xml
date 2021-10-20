@@ -2,13 +2,48 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a98bea71-2d21-4833-a61b-180a121649a9" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/app.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/static/openapi.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/static/openapi.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/export.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/export.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/genesis.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/genesis.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/pi-bridged/cs_config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/pi-bridged/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/pi-bridged/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/pi-bridged/pibridge" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/pi-bridged/pibridge" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vue/src/store/generated/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vue/src/store/generated/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vue/src/store/generated/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/vue/src/store/generated/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vue/src/store/generated/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vue/src/store/generated/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/protocol/protocol.go" beforeDir="false" afterPath="$PROJECT_DIR$/protocol/protocol.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testutil/network/network.go" beforeDir="false" afterPath="$PROJECT_DIR$/testutil/network/network.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testutil/simapp/simapp.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/blockchain/eth/eth_manager.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/blockchain/eth/eth_manager.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/client/cli/tx_block_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/client/cli/tx_block_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/keeper/block.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/keeper/block.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/keeper/grpc_query_block.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/keeper/grpc_query_block.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/keeper/msg_server_block.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/keeper/msg_server_block.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/block/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/block/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/chain/client/cli/tx_chain_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/chain/client/cli/tx_chain_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/chain/keeper/chain.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/chain/keeper/chain.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/chain/keeper/grpc_query_chain.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/chain/keeper/grpc_query_chain.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/chain/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/chain/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/chain/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/chain/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/node/client/cli/tx_node_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/node/client/cli/tx_node_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/node/keeper/grpc_query_node.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/node/keeper/grpc_query_node.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/node/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/node/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/node/keeper/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/node/keeper/node.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/node/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/node/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/pibridge/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/pibridge/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/pibridge/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/pibridge/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/proxy/client/cli/tx_proxy_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/proxy/client/cli/tx_proxy_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/proxy/keeper/grpc_query_proxy.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/proxy/keeper/grpc_query_proxy.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/proxy/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/proxy/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/proxy/keeper/proxy.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/proxy/keeper/proxy.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/proxy/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/proxy/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/trx/client/cli/tx_trx_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/trx/client/cli/tx_trx_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/trx/keeper/grpc_query_trx.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/trx/keeper/grpc_query_trx.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/trx/keeper/keeper.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/trx/keeper/keeper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/trx/keeper/trx.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/trx/keeper/trx.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/x/trx/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/x/trx/module.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

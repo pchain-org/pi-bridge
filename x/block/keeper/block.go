@@ -9,7 +9,7 @@ import (
 // SetBlock set a specific block in the store from its index
 func (k Keeper) SetBlock(ctx sdk.Context, block types.Block) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockKey))
-	b := k.cdc.MustMarshalBinaryBare(&block)
+	b := k.cdc.MustMarshal(&block)
 	store.Set(types.KeyPrefix(block.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetBlock(ctx sdk.Context, index string) (val types.Block, found 
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.UnmarshalInterface(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllBlock(ctx sdk.Context) (list []types.Block) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Block
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.UnmarshalInterface(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

@@ -9,7 +9,7 @@ import (
 // SetChain set a specific chain in the store from its index
 func (k Keeper) SetChain(ctx sdk.Context, chain types.Chain) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainKey))
-	b := k.cdc.MustMarshalBinaryBare(&chain)
+	b := k.cdc.MustMarshal(&chain)
 	store.Set(types.KeyPrefix(chain.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetChain(ctx sdk.Context, index string) (val types.Chain, found 
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.UnmarshalInterface(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllChain(ctx sdk.Context) (list []types.Chain) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Chain
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.UnmarshalInterface(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

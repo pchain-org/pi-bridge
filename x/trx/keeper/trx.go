@@ -9,7 +9,7 @@ import (
 // SetTrx set a specific trx in the store from its index
 func (k Keeper) SetTrx(ctx sdk.Context, trx types.Trx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TrxKey))
-	b := k.cdc.MustMarshalBinaryBare(&trx)
+	b := k.cdc.MustMarshal(&trx)
 	store.Set(types.KeyPrefix(trx.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetTrx(ctx sdk.Context, index string) (val types.Trx, found bool
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.UnmarshalInterface(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllTrx(ctx sdk.Context) (list []types.Trx) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Trx
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.UnmarshalInterface(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

@@ -9,7 +9,7 @@ import (
 // SetProxy set a specific proxy in the store from its index
 func (k Keeper) SetProxy(ctx sdk.Context, proxy types.Proxy) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProxyKey))
-	b := k.cdc.MustMarshalBinaryBare(&proxy)
+	b := k.cdc.MustMarshal(&proxy)
 	store.Set(types.KeyPrefix(proxy.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetProxy(ctx sdk.Context, index string) (val types.Proxy, found 
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.UnmarshalInterface(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllProxy(ctx sdk.Context) (list []types.Proxy) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Proxy
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.UnmarshalInterface(iterator.Value(), &val)
 		list = append(list, val)
 	}
 
